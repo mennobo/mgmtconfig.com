@@ -2,22 +2,25 @@
 title: "Design and Theory"
 ---
 
+> I love diagrams and pictures. I think you have those on your blog? Maybe we
+> can make a simple version here.
+
 ## Core components
 
 Primarily, `mgmt` consists of two main parts: the `engine` and the `language`.
-The engine runs a [graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)
-of [resources](https://mgmtconfig.com/docs/resources/). This declarative graph
-is lets the user describe the desired state of the system that they wish to
-build.
 
-The language sits on top of the engine (and as part of the same code base and
-binary) which can be used to generate the `resource graph`. The language itself
-forms a `function graph` which describes the execution data flow of the values
-in the language.
+**The Engine** manages your system
+[resources](https://mgmtconfig.com/docs/resources/) (files, packages, services)
+by running them as a connected
+[graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). It understands
+which tasks depend on others and can run independent tasks simultaneously.
 
-The output of the running language `function graph` is a stream of
-`resource graphs`. `Mgmt` is very efficient at switching from one resource graph
-to the next.
+**The Language** is how you tell mgmt what you want your system to look like.
+You write `.mcl` files that describe your desired state, and the language
+converts this into instructions the engine can execute.
+
+The clever part: when you change your `.mcl` files, mgmt smoothly transitions
+from your old configuration to the new one without stopping.
 
 ## What's unique about the engine?
 
@@ -37,9 +40,16 @@ re-checking that is the norm with the currently available legacy tooling.
 
 ### Distributed topology:
 
+Unlike traditional configuration management tools that use a client-server
+model, `mgmt` operates as a true distributed system. Here's how it works:
+
 The `mgmt` tool differs significantly from traditional client-server or
 orchestrator topologies. We instead, built it to work as a more general
 distributed system, which offers many compelling benefits.
+
+- **Traditional approach:** Central server → Agent pulls config → Agent applies
+  changes
+- **mgmt approach:** Distributed consensus (etcd) ← → mgmt agents collaborate
 
 The most common implementation is one in which you first run an `etcd` cluster,
 and then run an `mgmt` agent on each machine which you'd like to manage
@@ -49,6 +59,9 @@ There are also facilties available for running `mgmt` in an agentless mode, over
 `SSH`, and even in standalone mode. No central control server is ever used for
 coordinating operations. This does not mean that you can't model centralized
 control over your desired states.
+
+This architecture eliminates single points of failure and enables true
+peer-to-peer coordination.
 
 ## What's unique about the language?
 
